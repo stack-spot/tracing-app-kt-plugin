@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+
+  {{project_name}}:
+    environment:
+      {% if inputs.trace_exporter == 'Jaeger' %}
+      OTEL_TRACES_EXPORTER: jaeger
+      OTEL_EXPORTER_JAEGER_ENDPOINT: http://jaeger:14250
+      OTEL_SERVICE_NAME: {{project_name}}
+      {% elif inputs.trace_exporter == 'Xray' %}
+      OTEL_RESOURCE_ATTRIBUTES: service.name={{project_name}}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aws-otel-collector:4317
+      {% endif %}
+
+  {% if inputs.trace_exporter == 'Jaeger' %}
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "6831:6831"
+      - "6832:6832"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+  {% elif inputs.trace_exporter == 'Xray' %}
+  aws-otel-collector:
+    image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+    command: ["--config=/etc/otel-agent-config.yaml"]
+    environment:
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_SESSION_TOKEN: "${AWS_SESSION_TOKEN}"
+      AWS_REGION: "${AWS_REGION}"
+    volumes:
+      - ./config.yaml:/etc/otel-agent-config.yaml
+    ports:
+      - 4317:4317
+  {% endif %}
+      
+networks:
+ default:
+   driver: bridge

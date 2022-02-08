@@ -1,0 +1,17 @@
+name: "tracing-app-kt-plugin"
+description: Plugin to configure Tracing
+types:
+  - app
+tags:
+  - opentelemetry
+  - jaeger
+  - xray
+  - tracing
+inputs:
+  - label: "Do you want to exporter tracing in: "
+    type: text
+    name: "trace_exporter"
+    default: "Jaeger"
+    items:
+      - "Jaeger"
+      - "Xray"

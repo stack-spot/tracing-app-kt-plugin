@@ -1,0 +1,15 @@
+{% if inputs.trace_exporter == 'Xray' %}
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+exporters:
+  awsxray:
+
+service:
+  pipelines:
+    traces:
+      receivers: [ otlp ]
+      exporters: [ awsxray ]
+{% endif %}
