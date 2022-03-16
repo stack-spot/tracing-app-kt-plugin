@@ -7,9 +7,7 @@ services:
       {% if inputs.trace_exporter == 'Jaeger' %}
       - OTEL_TRACES_EXPORTER=jaeger
       - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14250
-      - OTEL_SERVICE_NAME={{project_name}}
-      {% elif inputs.trace_exporter == 'Xray' %}
-      - OTEL_RESOURCE_ATTRIBUTES=service.name={{project_name}}
+      {% elif inputs.trace_exporter == 'AWS X-Ray' %}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://aws-otel-collector:4317
       {% endif %}
 
@@ -24,21 +22,21 @@ services:
       - "16686:16686"
       - "14268:14268"
       - "14250:14250"
-  {% elif inputs.trace_exporter == 'Xray' %}
+  {% elif inputs.trace_exporter == 'AWS X-Ray' %}
   aws-otel-collector:
     image: public.ecr.aws/aws-observability/aws-otel-collector:latest
-    command: ["--config=/etc/otel-agent-config.yaml"]
+    command: ["--config=/etc/otel-collector-config.yaml"]
     environment:
-      - AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
-      - AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
-      - AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}"
-      - AWS_REGION="${AWS_REGION}"
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - AWS_REGION=${AWS_REGION}
     volumes:
-      - ./config.yaml:/etc/otel-agent-config.yaml
+      - ../collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - 4317:4317
   {% endif %}
-      
+
 networks:
  default:
    driver: bridge

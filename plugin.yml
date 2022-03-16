@@ -8,10 +8,37 @@ tags:
   - xray
   - tracing
 inputs:
-  - label: "Do you want to exporter tracing in: "
+  - label: "To which tool do you want to export traces?\n[WARNING] CDK will only be generated for X-Ray"
     type: text
     name: "trace_exporter"
-    default: "Jaeger"
+    default: "AWS X-Ray"
     items:
+      - "AWS X-Ray"
       - "Jaeger"
-      - "Xray"
+hooks:
+  - type: edit
+    trigger: after-render
+    path: infra/src/main/kotlin/{{project_group_id|group_id_folder}}/{{project_name|to_camel}}CdkStack.kt
+    changes:
+      - search:
+          string: 'val accountRole = cluster.addServiceAccount("account", accountOptions).role'
+          insert-after:
+            value: "{% if inputs.trace_exporter == 'AWS X-Ray' %}        accountRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName(\"AWSXrayWriteOnlyAccess\"))\n{% endif %}"
+          when:
+            not-exists: 'accountRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("AWSXrayWriteOnlyAccess"))'
+      - search:
+          string: 'import software.amazon.awscdk.services.eks.ServiceAccountOptions'
+          insert-after:
+            value: "{% if inputs.trace_exporter == 'AWS X-Ray' %}import software.amazon.awscdk.services.iam.ManagedPolicy\n{% endif %}"
+          when:
+            not-exists: 'import software.amazon.awscdk.services.iam.ManagedPolicy'
+  - type: edit
+    trigger: after-render
+    path: infra/src/main/kotlin/{{project_group_id|group_id_folder}}/Manifests.kt
+    changes:
+      - search:
+          string: 'deployment.exposeViaService'
+          insert-after:
+            value: "{% if inputs.trace_exporter == 'AWS X-Ray' %}        deployment.addContainer(OpenTelemeteryCollectorSidecar(this))\n{% endif %}"
+          when:
+            not-exists: 'deployment.addContainer(OpenTelemeteryCollectorSidecar(this))'

@@ -1,4 +1,4 @@
-{% if inputs.trace_exporter == 'Xray' %}
+{% if inputs.trace_exporter == 'AWS X-Ray' %}
 receivers:
   otlp:
     protocols:
