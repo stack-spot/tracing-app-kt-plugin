@@ -1,0 +1,2 @@
+O **tracing-app-kt-plugin** visa padronizar o *tracing* gerado pela aplicação utilizando OpenTelemetry para exportação dos dados.
+É possível escolher se o *tracing* gerado será enviado para **Jaeger** ou **AWS X-Ray**.
